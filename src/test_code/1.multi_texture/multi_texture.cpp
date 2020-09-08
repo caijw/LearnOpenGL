@@ -51,6 +51,8 @@ int main()
     // ------------------------------------
     Shader ourShader("4.1.texture.vs", "4.1.texture.fs"); 
 
+    // 左边的texture
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float left_vertices[] = {
@@ -116,6 +118,8 @@ int main()
     stbi_image_free(left_data);
 
 
+    // 右边的texture
+
     float right_vertices[] = {
         // positions          // colors           // left_texture coords
          1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
@@ -176,7 +180,7 @@ int main()
     }
     stbi_image_free(right_data);
 
-
+    // 主屏幕的texture
 
     float main_vertices[] = {
         // positions          // colors           // left_texture coords
@@ -214,6 +218,7 @@ int main()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // 离屏渲染配置
 
     // framebuffer configuration
     // -------------------------
@@ -239,6 +244,8 @@ int main()
         // -----
         processInput(window);
 
+        // 离屏渲染将两个texture合成一个texture
+
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
         // render
@@ -259,7 +266,7 @@ int main()
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
+        // 合成后的 texture 上屏
 
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glBindVertexArray(main_VAO);
