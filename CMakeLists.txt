@@ -62,6 +62,7 @@ set(CHAPTERS
     5.advanced_lighting
     6.pbr
     7.in_practice
+    test_code
 )
 
 set(1.getting_started
@@ -166,6 +167,9 @@ set(7.in_practice
     #3.2d_game
 )
 
+set(test_code
+    1.multi_texture
+)
 
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
