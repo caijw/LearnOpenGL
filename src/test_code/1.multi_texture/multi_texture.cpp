@@ -15,6 +15,25 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+    "}\0";
+const char *fragmentShaderSource = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D texture1;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = texture(texture1, TexCoord);\n"
+    "}\n\0";
+
+
 // settings
 unsigned int SCR_WIDTH = 0;
 unsigned int SCR_HEIGHT = 0;
@@ -117,9 +136,51 @@ int main()
         return -1;
     }
 
+    // build and compile our shader program
+    // ------------------------------------
+    // vertex shader
+    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+    // check for shader compile errors
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    // fragment shader
+    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    // check for shader compile errors
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    // link shaders
+    int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    // check for linking errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+
+
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader("6.1.coordinate_systems.vs", "6.1.coordinate_systems.fs");
+    // Shader ourShader("6.1.coordinate_systems.vs", "6.1.coordinate_systems.fs");
 
     for (auto &image : images) {
         int index = 0;
@@ -204,9 +265,11 @@ int main()
     }
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
-    ourShader.use();
-    ourShader.setInt("texture1", 0);
-    ourShader.setInt("texture2", 1);
+    // ourShader.use();
+    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); 
+    // ourShader.setInt("texture1", 0);
+    // ourShader.setInt("texture2", 1);
 
 
     // render loop
@@ -223,7 +286,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // activate shader
-        ourShader.use();
+        // ourShader.use();
+        glUseProgram(shaderProgram);
 
         for (auto &image : images) {
         // bind textures on corresponding texture units
@@ -233,7 +297,7 @@ int main()
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             // model = glm::translate(model, glm::vec3( 1.0f,  1.0f, 0.0f));
             // retrieve the matrix uniform locations
-            unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+            unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 
